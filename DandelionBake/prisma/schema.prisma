@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  Dikonfirmasi
+  Diproses_Dapur  @map("Diproses Dapur")
+  Sedang_Dikirim  @map("Sedang Dikirim")
+  Selesai
+}
+
+model User {
+  id        String   @id @default(dbgenerated("to_char(nextval('user_id_seq'), 'FM0000')"))
+  nama      String
+  tier      String   @default("MEMBER")
+  saldo     Int      @default(0) // Live poin
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id               String      @id @default(dbgenerated("to_char(nextval('order_id_seq'), 'FM0000')"))
+  userId           String?
+  user             User?       @relation(fields: [userId], references: [id])
+  namaPembeli      String
+  totalTagihan     Int
+  items            Json?       // Daftar item: [{name, qty}]
+  metodePembayaran String?
+  tipePesanan      String      @default("REGULAR")
+  status           OrderStatus @default(Dikonfirmasi)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
